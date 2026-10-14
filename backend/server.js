@@ -37,10 +37,22 @@ const geminiAskAnythingModel = process.env.geminiAskAnythingModel;
 
 // A small test route. If this returns { status: "ok" },
 // the backend server is running correctly.
-// currently not invoked by front-end but, tester can use to make sure
-// backend is running
+// The frontend calls this route with fetch() when the page loads to show
+// whether it is connected to the backend (local or Cloud Run).
 app.get('/api/health', (request, response) => {
-  response.json({ status: 'ok' });
+  response.json({
+    status: 'ok',
+    service: 'smart-speech-coach-backend',
+    // K_SERVICE is set automatically by Google Cloud Run, so the frontend
+    // can tell whether it is talking to the deployed service or a local server.
+    runningOn: process.env.K_SERVICE ? 'Google Cloud Run' : 'local',
+    time: new Date().toISOString(),
+  });
+});
+
+// Visiting the bare Cloud Run URL in a browser shows this instead of "Cannot GET /".
+app.get('/', (request, response) => {
+  response.send('Smart Speech Coach backend is running. Try GET /api/health or POST /api/askanything.');
 });
 
 // Ask Anything endpoint

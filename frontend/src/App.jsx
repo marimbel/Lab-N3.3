@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import speechCoachLogo from './assets/speech-coach-logo.jpg'
@@ -22,8 +22,48 @@ function App() {
     serverRemote === 'Y'
       ? import.meta.env.VITE_SERVER_URL_REMOTE
       : import.meta.env.VITE_SERVER_URL_LOCAL
-  
-  
+
+  // backendStatus describes whether the frontend can reach the backend.
+  // It is filled in by the /api/health fetch below.
+  // If no backend URL is configured, show that right away instead of checking.
+  const [backendStatus, setBackendStatus] = useState(
+    serverUrl
+      ? { state: 'checking', text: 'Checking backend connection...' }
+      : {
+          state: 'error',
+          text: 'No backend URL set. Add VITE_SERVER_URL_REMOTE / VITE_SERVER_URL_LOCAL to frontend/.env.',
+        }
+  )
+
+  // When the page first loads, call the backend's /api/health route with fetch().
+  // This proves the browser can reach the backend (e.g. the Google Cloud Run service)
+  // before the user even asks a question.
+  useEffect(() => {
+    if (!serverUrl) return
+
+    async function checkBackend() {
+      try {
+        const response = await fetch(`${serverUrl}/api/health`)
+        const data = await response.json()
+        if (!response.ok || data.status !== 'ok') {
+          throw new Error('Backend responded but is not healthy.')
+        }
+        setBackendStatus({
+          state: 'ok',
+          text: `Connected to backend (${data.runningOn || 'unknown'}): ${serverUrl}`,
+        })
+      } catch {
+        setBackendStatus({
+          state: 'error',
+          text: `Cannot reach backend at ${serverUrl}. Is it running, and is this site in allowedOrigins (CORS)?`,
+        })
+      }
+    }
+
+    checkBackend()
+  }, [serverUrl])
+
+
   // This function runs when the user presses Enter in the form.
   async function handleSubmit(event) {
     // Stop the browser from refreshing the page when the form submits.
@@ -56,7 +96,9 @@ function App() {
       })
 
       // Read the JSON response from the backend.
-      const data = await response.json()
+      // If the backend sent back something that is not JSON (e.g. an HTML error page),
+      // fall back to an empty object so we can still show a useful error.
+      const data = await response.json().catch(() => ({}))
 
       // If the backend returned an error status, show that error to the user.
       if (!response.ok) {
@@ -67,7 +109,12 @@ function App() {
       setAnswer(data.answer)
     } catch (error) {
       // If the request fails, display a simple error message in the answer box.
-      setAnswer(error.message)
+      // "Failed to fetch" means the browser never got a response (wrong URL, backend down, or CORS).
+      setAnswer(
+        error.message === 'Failed to fetch'
+          ? `Could not reach the backend at ${serverUrl}.`
+          : error.message
+      )
     } finally {
       // Re-enable the input whether the request succeeded or failed.
       setIsLoading(false)
@@ -102,6 +149,9 @@ function App() {
         <div className="answer-box" aria-live="polite">
           {answer}
         </div>
+        <p className={`backend-status backend-status-${backendStatus.state}`}>
+          {backendStatus.text}
+        </p>
       </section>
 
       <div className="ticks"></div>

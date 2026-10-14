@@ -176,3 +176,22 @@
     border-right-color: var(--border);
   }
 }
+
+/* Small line under the answer box showing whether the backend is reachable. */
+.backend-status {
+  margin: 12px 0 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.backend-status-checking {
+  color: var(--text);
+}
+
+.backend-status-ok {
+  color: #1a7f37;
+}
+
+.backend-status-error {
+  color: #cf222e;
+}
