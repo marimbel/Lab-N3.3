@@ -100,14 +100,14 @@ app.post('/api/askanything', async (request, response) => {
 User question: ${message}`;
 
     // Ask Gemini for a response using the Interactions API.
-    const interaction = await ai.interactions.create({
+    const interaction = await ai.models.generateContent({
       model: geminiAskAnythingModel,
-      input: prompt,
+      contents: prompt,
     });
 
     // Send only the final answer text back to the frontend.
     response.json({
-      answer: interaction.output_text,
+      answer: interaction.text,
     });
   } catch (error) {
     // Log the real error for the developer, but send the user
