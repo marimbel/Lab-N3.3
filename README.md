@@ -54,7 +54,7 @@ Copy each example file and fill in your values. The real files are already in `.
 `backend/.env.cloudrun` example (YAML; **do not** include `PORT`, because Cloud Run sets it itself):
 ```yaml
 GEMINI_API_KEY: "your_gemini_api_key"
-geminiAskAnythingModel: "gemini-2.5-flash"
+geminiAskAnythingModel: "gemini-3.8-flash"
 askAnythingPrompt: "You are going to answer questions about Smart Speech Coach. ... Keep the answer to 1-3 sentences."
 allowedOrigins: "http://localhost:5173,http://127.0.0.1:5173"
 ```
@@ -162,12 +162,22 @@ gcloud run services logs read smart-speech-coach-backend --region us-west1 --lim
 > Note: `--env-vars-file` stores the API key as a plain environment variable on the service. For a production app, store it in [Secret Manager](https://cloud.google.com/run/docs/configuring/services/secrets) and use `--set-secrets` instead.
 
 ### 3.8 Our deployment
+
 | | |
 |---|---|
-| Google Cloud project | `YOUR_PROJECT_ID` |
+| Google Cloud project | `lab-n3-3` |
 | Service name / region | `smart-speech-coach-backend` / `us-west1` |
-| Service URL | `https://YOUR-CLOUD-RUN-URL` |
-| Deployed by / date | |
+| Service URL | https://smart-speech-coach-backend-763332597559.us-west1.run.app |
+| Deployed by / date | Nico Savaides / October 14, 2026 |
+| Deployment status | Successfully deployed and tested |
+
+**Testing results:**
+- The `/api/health` endpoint returned `status: ok` and confirmed the backend was running on Google Cloud Run.
+- The `/api/askanything` endpoint successfully returned a Gemini-generated response.
+- The React frontend successfully communicated with the deployed backend using JavaScript `fetch()`.
+- The application was tested using Google Cloud Shell's web preview on port `5173`.
+
+**Gemini API update:** Changed the backend from `ai.interactions.create()` to `ai.models.generateContent()` and updated the response property to `interaction.text`. This allowed the application to use a working Gemini API configuration.
 
 ---
 
